@@ -1,0 +1,44 @@
+Package: public.ctn0094extra
+Title: Helper Files for the CTN-0094 Relational Database
+Version: 0.0.0.9011
+Date: 2023-06-19
+Authors@R: 
+    c(
+      person(
+        given = "Gabriel", family = "Odom",
+        role = c("aut", "cre"),
+        email = "gabriel.odom@fiu.edu",
+        comment = c(ORCID = "0000-0003-1341-4555")
+      ),
+      person(
+        given = "Raymond", family = "Balise",
+        role = "aut",
+        email = "balise@miami.edu",
+        comment = c(ORCID = "0000-0002-9856-5901")
+      )
+    )
+Description: The ctn0094data package contains the harmonized datasets from
+    the CTN-0027, CTN-0030, and CTN-51 clinical trials for opioid use disorder.
+    This current version is built from ctn0094data v. 0.0.0.9028.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Depends: 
+    R (>= 2.10),
+    ctn0094data
+Imports:
+    dplyr,
+    magrittr,
+    purrr,
+    tibble,
+    utils
+Suggests: 
+    knitr, 
+    kableExtra,
+    rmarkdown,
+    scales,
+    tidyverse
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+VignetteBuilder: knitr
+URL: https://github.com/CTN-0094/public.ctn0094extra
