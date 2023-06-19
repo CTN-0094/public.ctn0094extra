@@ -5,7 +5,7 @@
 
 
 ######  Setup and Data Backbone  ##############################################
-library(ctn0094data)
+library(public.ctn0094data)
 # MAKE SURE THIS PACKAGE IS BUILT FROM ctn0094data_noGit/ or its copy in
 #   Box/CTN0094/Harmonization/Ray/. The old versions are in Box/ctn0094data/.
 # UPDATE 2021-11-23: use Box/ctn0094data_dev2/
@@ -13,7 +13,8 @@ library(ctn0094data)
 # UPDATE 2022-03-08: use Box/ctn0094data_dev2/ v. 0.0.0.9016
 # UPDATE 2022-08-15: use Box/ctn0094DataBurner/ v. 0.0.0.9023
 # UPDATE 2023-03-24: Ray emailed me the zipped source for v. 0.0.0.9028
-library(ctn0094DataExtra)
+# UPDATE 2023-06-19: Ray added public.ctn0094data_0.9.0.tar.gz to Box/
+library(public.ctn0094extra)
 # I rebuilt ctn0094DataExtra (v. 0.0.0.9007) using v. 0.0.0.9016 of ctn0094data
 # I rebuilt ctn0094DataExtra (v. 0.0.0.9008) using v. 0.0.0.9023 of ctn0094data
 # I rebuilt ctn0094DataExtra (v. 0.0.0.9010) using v. 0.0.0.9028 of ctn0094data
@@ -83,14 +84,14 @@ nonStudyOpioids_char <- c("Opioid", "Methadone", "Buprenorphine")
 #   that the subject was not assigned to.
 
 # First question: did anyone in CTN-0030 switch away from Buprenorphine?
-ctn0094data::randomization %>%
+public.ctn0094data::randomization %>%
   left_join(everybody, by = "who") %>%
   select(who, treatment, project) %>%
   group_by(project, treatment) %>%
   summarise(nInArm = n())
 # No, they only switched from SMM to EMM, so we can drop the second rand date
 
-ctn0094data::randomization %>%
+public.ctn0094data::randomization %>%
   filter(which == 1) %>%
   left_join(everybody, by = "who") %>%
   select(who, treatment, project) %>%
@@ -98,7 +99,7 @@ ctn0094data::randomization %>%
   summarise(nInArm = n())
 # Better. Now we want to create sets by treatment drug:
 treatGroups_ls <-
-  ctn0094data::randomization %>%
+  public.ctn0094data::randomization %>%
   filter(which == 1) %>%
   left_join(everybody, by = "who") %>%
   select(who, treatment) %>%

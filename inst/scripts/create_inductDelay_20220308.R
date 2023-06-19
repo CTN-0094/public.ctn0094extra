@@ -7,8 +7,8 @@
 #   which marks day of induction
 # This is a cleaner variant of "scripts/scratch_mark_induction_20210702.R"
 
-library(ctn0094data)
-library(ctn0094DataExtra)
+library(public.ctn0094data)
+library(public.ctn0094extra)
 library(tidyverse)
 
 

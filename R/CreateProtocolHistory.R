@@ -57,7 +57,7 @@ CreateProtocolHistory <- function(start_vec, end_vec, persons_df = "everybody"){
   if (identical(persons_df, "everybody")) {
     
     everybody <- NULL
-    data("everybody", package = "ctn0094data", envir = here_env)
+    data("everybody", package = "public.ctn0094data", envir = here_env)
     thePeople_df <- everybody
     
   } else {

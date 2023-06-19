@@ -7,11 +7,11 @@
 #   (n_W = 2484), "Non-Hispanic Black" (n_B = 347), "Hispanic" (n_H = 507), and
 #   "Other" (n_O = 222). We should make this data-driven instead of typed.
 
-library(ctn0094DataExtra)
+library(public.ctn0094extra)
 library(tidyverse)
 
 derived_raceEthnicity <-
-  ctn0094data::demographics %>%
+  public.ctn0094data::demographics %>%
   mutate(
     raceEth = case_when(
       race == "White" & is_hispanic == "No" ~ "NHW",

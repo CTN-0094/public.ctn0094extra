@@ -11,7 +11,7 @@
 #'    function loads these data sets into a self-destructing environment and
 #'    then returns a named list of these data sets.
 #'
-#' @import ctn0094data
+#' @import public.ctn0094data
 #' @importFrom magrittr `%>%`
 #' @importFrom purrr map
 #' @importFrom utils data
