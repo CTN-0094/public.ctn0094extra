@@ -6,7 +6,7 @@ Helper functions for the CTN-0094 data package.
 Because this is the "Extra" package which supplements the information in the primary `public.ctn0094data::` package, we muse have the most recent version of this primary data package built first. To build this package from "zipped" source file, run the following code (make sure to set the path for your machine):
 ```r
 install.packages(
-  '/Users/gabrielodom/Desktop/ctn0094data_0.0.0.9028.tar.gz',
+  '/Users/gabrielodom/Desktop/public.ctn0094data_0.9.0.tar.gz',
   repos = NULL,
   type = 'source'
 )
