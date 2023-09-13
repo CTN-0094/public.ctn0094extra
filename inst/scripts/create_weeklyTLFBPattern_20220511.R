@@ -14,6 +14,7 @@ library(public.ctn0094data)
 # UPDATE 2022-08-15: use Box/ctn0094DataBurner/ v. 0.0.0.9023
 # UPDATE 2023-03-24: Ray emailed me the zipped source for v. 0.0.0.9028
 # UPDATE 2023-06-19: Ray added public.ctn0094data_0.9.0.tar.gz to Box/
+# UPDATE 2023-09-12: public.ctn0094data is finally on GitHub
 library(public.ctn0094extra)
 # I rebuilt ctn0094DataExtra (v. 0.0.0.9007) using v. 0.0.0.9016 of ctn0094data
 # I rebuilt ctn0094DataExtra (v. 0.0.0.9008) using v. 0.0.0.9023 of ctn0094data

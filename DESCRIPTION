@@ -1,7 +1,7 @@
 Package: public.ctn0094extra
 Title: Helper Files for the CTN-0094 Relational Database
-Version: 0.0.0.9011
-Date: 2023-06-19
+Version: 1.0.0
+Date: 2023-08-12
 Authors@R: 
     c(
       person(
@@ -17,9 +17,13 @@ Authors@R:
         comment = c(ORCID = "0000-0002-9856-5901")
       )
     )
-Description: The ctn0094data package contains the harmonized datasets from
-    the CTN-0027, CTN-0030, and CTN-51 clinical trials for opioid use disorder.
-    This current version is built from ctn0094data v. 0.0.0.9028.
+Description: The public.ctn0094extra package contains "helper" functions and
+    engineered featured ancillary to the public.ctn0094data package. This
+    public.ctn0094data package contains harmonized datasets from the National
+    Institute of Drug Abuse's Clinical Trials Network (NIDA's CTN) projects.
+    Specifically, the CTN-0094 project is to harmonize and de-identify clinical
+    trials data from the CTN-0027, CTN-0030, and CTN-51 studies for opioid use
+    disorder. This current version is built from public.ctn0094data v. 1.0.3.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

@@ -79,6 +79,7 @@ system.time(
 )
 # 23.466 minutes for 691250 rows in 3560 participants
 # (with the old version it only took 9 minutes; what happened?)
+# UPDATE 2023-09-12: back to 7.9 minutes???
 
 
 
