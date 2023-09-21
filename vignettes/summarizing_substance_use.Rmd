@@ -1,0 +1,323 @@
+---
+title: "Summarizing Longitudinal Substance Use as Quinary Words"
+author: "Gabriel Odom and Raymond Balise"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+      toc: true
+      toc_depth: 4
+vignette: >
+  %\VignetteIndexEntry{Summarizing Substance Use}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE,
+	collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+# Introduction
+
+Here are the packages we need for this vignette:
+```{r packages}
+library(public.ctn0094data)
+library(public.ctn0094extra)
+library(dplyr)
+library(purrr)
+library(tibble)
+library(tidyr)
+library(stringr)
+```
+
+In this vignette, we will walk through the basic procedures to collapse participants' Urine Drug Screen (UDS) or Timeline Follow-Back (TLFB) data streams into [quinary word](https://doi.org/10.1371/journal.pone.0291248) summaries for downstream analysis. The basic steps are:
+
+1. calculate the *induction* delay (difference, in days, between the day a participant was randomized to a trial arm and the day that they received the first dose of study drug). The `public.ctn0094data` database has a) the day of randomization and b) the days for which study drugs were administered, relative to Day 0 (the day study consent was signed).
+2. partition the study days into weeks, then mark which weeks do not have a UDS collection event (these will be marked as "missing").
+3. summarize the UDS data within each participant by week into symbols using [quinary word logic](https://doi.org/10.1371/journal.pone.0291248), then collapse the symbols into a participant-specific "word".
+
+Rather than perform these calculations on all ~3600 participants included in `public.ctn0094data` and `public.ctn0094extra`, we will use the following 10 participants as examples:
+```{r}
+examplePeople_int <- c(1L, 163L, 210L, 242L, 4L, 17L, 13L, 1103L, 233L, 2089L)
+```
+
+
+-------------------------------------------------------------------------------
+
+</br>
+
+
+# Calculate Induction Delay
+As we mentioned above, the *induction* delay is the difference, in days, between the day a participant was randomized to a trial arm and the day that they received the first dose of study drug. The reason we need this is because any UDS collected or TLFB recorded on or before the induction day must be considered *pre-treatment*, even if the participant has already been assigned to a treatment arm.
+
+
+## Data Setup
+The `randomization` day includes a first and second randomization day for all participants. For CTN-0027 and CTN-0051, these days are the same; for CTN-0030 these days are different. In order to find the induction delay, we only need the first randomization event
+```{r trim-data-1}
+data_ls <- loadRawData(c("randomization", "treatment"))
+
+data_ls$randomization <-
+  data_ls$randomization %>%
+  select(who, when, treatment, randomized = which) %>%
+  # Remove second randomization events
+  filter(randomized != 2) %>% 
+  # Retain example participants
+  filter(who %in% examplePeople_int)
+
+data_ls$treatment <- 
+  data_ls$treatment %>% 
+  # Retain example participants
+  filter(who %in% examplePeople_int)
+```
+
+Let's inspect our results:
+```{r view-data-1}
+data_ls$randomization
+
+data_ls$treatment
+```
+
+
+## Mark Study Days with Administered Treatment Drugs
+Some participants were marked as receiving 0mg of the study drug to which they were assigned. We want to mark all the days where a participant actually got some of the assigned study drug.
+```{r mark-study-drug-days}
+treatTimeLong_df <-
+  # Collapse Data List
+  data_ls %>%
+  reduce(.f = full_join, by = c("who", "when")) %>%
+  as_tibble() %>%
+  arrange(who, when) %>%
+  # First pass: find any day with a dose of treatment drug
+  rowwise() %>%
+  mutate(
+    treated = if_else(
+      condition = !is.na(amount) & amount > 0,
+      true = TRUE,
+      false = FALSE,
+      missing = FALSE
+    )
+  )
+
+# Inspect results
+treatTimeLong_df
+```
+
+
+## Measure Difference from Randomization Day to Day of First Dose
+Some participants received their first non-zero dose of their assigned study drug days after they were assigned to a treatment arm. If the subject supplies a UDS sample positive for substances of interest or records a substance use event in the TLFB after they were assigned to treatment but before they received treatment, these should not count against the efficacy of the study drug.
+```{r calculate-induction-delay}
+inductDelay_df <-
+  treatTimeLong_df %>%
+  # Find the day of the first treatment
+  group_by(who) %>%
+  arrange(when) %>%
+  filter(treated) %>%
+  slice(1) %>%
+  mutate(treatStart = when) %>%
+  select(who, when, treatStart) %>%
+  # Add the first day back to the original data
+  left_join(treatTimeLong_df, ., by = c("who", "when")) %>%
+  group_by(who) %>%
+  fill(treatStart, .direction = "updown") %>%
+  # Calculate the delay
+  filter(randomized == 1) %>%
+  # This sets time to be missing if the induction was not observed
+  mutate(inductDelay = treatStart - when) %>%
+  select(who, treatment, inductDelay) %>%
+  ungroup()
+
+# Inspect results
+inductDelay_df
+```
+
+```{r echo=FALSE}
+eg_df <-
+  inductDelay_df %>% 
+  filter(inductDelay > 0)
+```
+
+We can see that participant `r eg_df$who` received their first dose of `r eg_df$treatment` `r eg_df$inductDelay` days after they were assigned to that treatment arm.
+```{r echo=FALSE}
+rm(eg_df)
+```
+
+Let's clean up our environment before we move on:
+```{r clean-up-1}
+rm(data_ls, treatTimeLong_df)
+```
+
+
+
+-------------------------------------------------------------------------------
+
+</br>
+
+
+# Partition Visit Weeks and Impute Missing Visits
+Now that we have the study day for which each participant received their first dose of study drug (induction day), we can partition the study days into weeks before and after induction delay as pre-study / baseline period and study period, respectively.
+
+
+## "Backbone" Timeline of Clinical Protocol
+If we want to know which visits were missed, we first need to know which visits were required by the protocols of the three studies.
+
+### CTN-0027 and CTN-0051 Protocols
+This code will create a table with the subject ID, which trial they participated in, and a column of all possible trial contact days, from 30 days prior to consent to 24 weeks after. See the function documentation for `CreateProtocolHistory()` for more information.
+```{r backbone-2751}
+start_int <- c(`27` = -30L, `51` = -30L)
+end_int   <- c(`27` = 168L, `51` = 168L)
+backbone2751_df <- 
+  CreateProtocolHistory(
+	  start_vec = start_int,
+	  end_vec = end_int
+	) %>% 
+  filter(who %in% examplePeople_int)
+
+# Inspect
+ backbone2751_df
+```
+
+### CTN-0030 Protocol
+Because the CTN-0030 protocol was adaptive, the amount of time requested to be spent in the study will change based on the participants' reactions to the first phase of treatment. See the function documentation for `CreateCTN30ProtocolHistory()` for more information.
+```{r backbone-30}
+backbone30_df <-
+	randomization %>%
+	full_join(everybody, by = "who") %>%
+	filter(project == "30") %>%
+  filter(who %in% examplePeople_int) %>% 
+	CreateCTN30ProtocolHistory() %>%
+	mutate(project = "30") %>%
+	select(who, project, when)
+
+# Inspect
+backbone30_df
+
+backbone30_df %>% 
+  group_by(who) %>% 
+  summarise(lastDay = max(when))
+```
+
+We can clearly see that the protocol length for some participants in CTN-0030 was much longer than others.
+
+### Combined "Backbone"
+We can now combine these two datasets and clean up our environment.
+```{r backbone}
+backbone_df <-
+  bind_rows(backbone2751_df, backbone30_df) %>%
+	arrange(who)
+
+rm(backbone2751_df, backbone30_df, start_int, end_int)
+```
+
+
+## Mark Missing Visits
+Now that we know the start of treatment and range of expected participation days per protocol, we can take the "difference" to find out when participants were supposed to visit the clinic, but did not.
+
+### Data Setup
+Let's set up the data for our example people:
+```{r trim-data-2}
+data_ls <- loadRawData(c("randomization", "visit"))
+
+data_ls$randomization <-
+  data_ls$randomization %>%
+  select(who, when, treatment, randomized = which) %>%
+  # Remove second randomization events
+  filter(randomized != 2) %>% 
+  # Retain example participants
+  filter(who %in% examplePeople_int)
+
+data_ls$visit <- 
+  data_ls$visit %>% 
+  filter(who %in% examplePeople_int)
+```
+
+### Add First Randomization Day
+```{r add-randomization-day}
+timelineRand1_df <-
+	data_ls$randomization %>%
+	mutate(randomized = randomized == "1") %>%
+	# Join to backbone and arrange within subject by day
+	full_join(backbone_df, by = c("who", "when")) %>%
+	group_by(who) %>%
+	arrange(when, .by_group = TRUE) %>%
+	select(who, project, when, randomized)
+
+# Inspect
+timelineRand1_df
+```
+
+### Add on the Visit Days
+```{r add-visit-days}
+timelineVisit1_df <-
+	data_ls$visit %>%
+	select(who, when, visit, status = what) %>%
+	filter(status %in% c("visit", "final")) %>%
+	mutate(visit = TRUE) %>%
+	select(who, when, visit) %>%
+	left_join(timelineRand1_df, ., by = c("who", "when"))
+
+# Inspect
+timelineVisit1_df
+```
+
+Most (6 of 7 days, on average) of the data will be missing values (shown by `NA`) because participants were not expected to visit the clinic more than once per week.
+
+### Impute the Missing Visits
+This function will assign visit values to "missing" roughly every seven days that a visit hasn't been recorded. See the function documentation for `MarkMissing()` for more information. *Note: this function can take a while to run if used on thousands of participants over dozens of weeks each.*
+```{r mark-missing-visits}
+timelineMissing1_df <- MarkMissing(timelineVisit1_df) 
+```
+
+### Clean up the Results
+We aren't showing the results from the function above because they still need to be wrangled a bit.
+```{r tidy-missing-visit-marks}
+derived_visitImputed <-
+	timelineMissing1_df %>%
+  mutate(visit = as.character(visit)) %>%
+	replace_na(list(visit = "", visitYM = "")) %>%
+	mutate(visitImputed = paste0(visit, visitYM)) %>%
+	mutate(
+		visitImputed = str_replace(
+			visitImputed, pattern = "TRUETRUE", replacement = "Present"
+		)
+	) %>%
+	select(who, when, visitImputed) %>%
+	filter(visitImputed != "") %>%
+	ungroup()
+
+# Inspect
+derived_visitImputed
+```
+
+Let's now clean up our environment:
+```{r clean-up-2}
+rm(
+  backbone_df, data_ls, timelineMissing1_df, timelineRand1_df, timelineVisit1_df
+)
+```
+
+-------------------------------------------------------------------------------
+
+</br>
+
+
+# Summarize Weekly Substance Use Results
+This step is the most involved, so we will only show the steps necessary to complete this task for our 10 example participants. However, the full workflow is available at <LINK>.
+
+-------------------------------------------------------------------------------
+
+</br>
+
+
+# Wrapping Up
+
+```{r}
+sessionInfo()
+```

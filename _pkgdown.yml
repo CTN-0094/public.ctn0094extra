@@ -1,0 +1,36 @@
+title: public.ctn0094extra
+url: https://ctn-0094.github.io/public.ctn0094extra/
+template:
+  bootstrap: 5
+  bootswatch: united
+authors:
+  Raymond Balise:
+    href: https://github.com/RaymondBalise
+  Gabriel Odom:
+    href: https://gabriel.quarto.pub/home/
+navbar:
+  structure:
+    left:
+    - articles
+    - reference
+    right:
+    - search
+    - github
+  components:
+    articles:
+      text: Vignettes
+      menu:
+      - text: Summarizing Substance Use
+        href: articles/summarizing_substance_use.html
+home:
+  sidebar:
+    structure:
+    - license
+    - toc
+    - authors
+    - custom
+    - citation
+    components:
+      custom:
+        title: Funding
+        text: NIDA UG1DA013035, U10DA13720

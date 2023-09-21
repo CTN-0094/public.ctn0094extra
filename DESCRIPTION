@@ -1,7 +1,7 @@
 Package: public.ctn0094extra
 Title: Helper Files for the CTN-0094 Relational Database
-Version: 1.0.0
-Date: 2023-08-12
+Version: 1.0.1
+Date: 2023-09-21
 Authors@R: 
     c(
       person(
@@ -18,12 +18,13 @@ Authors@R:
       )
     )
 Description: The public.ctn0094extra package contains "helper" functions and
-    engineered featured ancillary to the public.ctn0094data package. This
-    public.ctn0094data package contains harmonized datasets from the National
-    Institute of Drug Abuse's Clinical Trials Network (NIDA's CTN) projects.
-    Specifically, the CTN-0094 project is to harmonize and de-identify clinical
-    trials data from the CTN-0027, CTN-0030, and CTN-51 studies for opioid use
-    disorder. This current version is built from public.ctn0094data v. 1.0.3.
+    engineered featured ancillary to the public.ctn0094data package (see 
+    <https://ctn-0094.github.io/public.ctn0094data/>). This public.ctn0094data
+    package contains harmonized datasets from some of the National Institute of
+    Drug Abuse's Clinical Trials Network (NIDA's CTN) projects. Specifically,
+    the CTN-0094 project is to harmonize and de-identify clinical trials data
+    from the CTN-0027, CTN-0030, and CTN-51 studies for opioid use disorder.
+    This current version is built from public.ctn0094data v. 1.0.3.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -41,8 +42,10 @@ Suggests:
     kableExtra,
     rmarkdown,
     scales,
-    tidyverse
+    stringr,
+    tidyr
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 VignetteBuilder: knitr
-URL: https://github.com/CTN-0094/public.ctn0094extra
+URL: https://ctn-0094.github.io/public.ctn0094extra/
+Bugreports: https://github.com/CTN-0094/public.ctn0094extra/issues
