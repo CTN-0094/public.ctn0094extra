@@ -208,7 +208,7 @@ We can clearly see that the protocol length for some participants in CTN-0030 wa
 
 ### Combined "Backbone"
 We can now combine these two datasets and clean up our environment.
-```{r backbone}
+```{r backbone-first}
 backbone_df <-
   bind_rows(backbone2751_df, backbone30_df) %>%
 	arrange(who)
@@ -309,7 +309,142 @@ rm(
 
 
 # Summarize Weekly Substance Use Results
-This step is the most involved, so we will only show the steps necessary to complete this task for our 10 example participants. However, the full workflow is available at <LINK>.
+This step is the most involved, so we will only show the steps necessary to complete this task for our 10 example participants. However, the full workflow is available at <LINK>. The general steps for randomized trial participants in this procedure are:
+
+1. Determine which treatment arm to which each participant was assigned. Recall that buprenorphine can be used both as a standard treatment and an illicit substance. Therefore, having a TLFB record of or UDS positive for buprenorphine for a particular study day should not automatically be counted as "substance misuse".
+2. For the substance(s) of interest (in our case, opioids), indicate their presence (or absence) in participants' data streams for each study visit day. This will result in a "long" data table with one row per participant per study visit and a logical value indicating if the participant used the substance(s) of interest on that day.
+3. Create a "ticker" of study days, then partition these days into study weeks. For an "intent to treat" analysis, day 0 should be the randomization day. Otherwise, day 0 should be the induction day calculated above. *Note: we will use an "intent to treat" analysis from this point on.*
+4. Summarize substance use within each study week using a [quinary word](https://doi.org/10.1371/journal.pone.0291248). For many participants, they have at least one week wherein more than one UDS sample was supplied. Our combination logic to summarise detected weekly substance use is as follows: if all UDS samples within that study week are positive for the substance(s) of interest, then the week is marked "+". If all UDS samples are negative for the substance(s) of interest, then the week is marked "-". If there is a mixture, the week is marked "\*". If the participant was supposed to supply a urine sample in that week but did not, then the week is marked "o". If the participant was not supposed to supply a urine sample in that week (and did not supply one), then the week is marked "\_".
+5. Group these weekly summaries into trial phase (baseline / pre-randomization, phase 1, or phase 2 [CTN-0030 only]) and collapse into a single string.
+
+You may have participants who consented to join the trial but were never randomized to a treatment arm. For these individuals, if a "complete study summary" is required (that is, you must include all participants who consented, even if they never were randomized), we recommend creating a use pattern word which is either all "o" or all "\_".
+
+
+## Data Setup
+First we build our data "backbone" as above (showing here to mirror the work done in the analysis script):
+```{r backbone-again}
+# CTN-0027 and CTN-0051
+start_int <- c(`27` = -30L, `51` = -30L)
+end_int   <- c(`27` = 168L, `51` = 168L) # 24 weeks
+backbone2751_df <- CreateProtocolHistory(
+	start_vec = start_int, end_vec = end_int
+)
+
+# CTN-0030
+backbone30_df <-
+	randomization %>%
+	full_join(everybody, by = "who") %>%
+	filter(project == "30") %>%
+	CreateCTN30ProtocolHistory() %>%
+	mutate(project = "30") %>%
+	select(who, project, when)
+
+# All Days
+backbone_df <- bind_rows(
+	backbone2751_df, backbone30_df
+) %>%
+	arrange(who) %>%
+  mutate(project = factor(project, levels = c("27", "30", "51"))) %>% 
+  filter(who %in% examplePeople_int)
+
+rm(backbone2751_df, backbone30_df, start_int, end_int)
+```
+
+Now we create a data set that combines the treatment arm with the imputed visits data we calculated above.
+```{r}
+randomized_df <-
+  randomization %>%
+  filter(who %in% examplePeople_int) %>% 
+  mutate(randomized = as.integer(as.character(which))) %>%
+  select(who, when, randomized) %>%
+  left_join(everybody, by = "who") %>%
+  filter( !(randomized == 2 & project %in% c("27", "51")) ) %>%
+  select(-project)
+
+udsUse2_df <-
+	backbone_df %>%
+	left_join(randomized_df, by = c("who", "when")) %>%
+	left_join(derived_visitImputed, by = c("who", "when")) %>%
+	left_join(uds, by = c("who", "when")) %>%
+	# So we can use MarkUse() with UDS data (instead of all_drugs)
+	mutate(source = "UDS")
+```
+
+This data set is an interesting one. It has one record per participant, per study day, *per substance reported*. So, because we are using UDS, this means that only rows which correspond to *study visit days* wherein a urine sample was supplied and positive for multiple substances will be duplicated. If we had used TLFB data instead, a data table in this form would be orders of magnitude longer, with many rows per participant per day. Here are visit days wherein substances were detected in the urine of participant 0017:
+```{r eg-visit-day-substances}
+udsUse2_df %>% 
+  filter(visitImputed == "Present") %>% 
+  filter(!is.na(what)) %>% 
+  filter(who == 17) %>% 
+  print(n = nrow(.))
+```
+
+
+## Participant's Assigned Treatment 
+Which substances are considered "approved" and which are "illicit"?
+```{r good-drugs-bad-drugs}
+nonStudyOpioids_ls <- list(
+  "Buprenorphine" = c("Opioid", "Methadone"),
+  "Methadone"     = c("Opioid", "Buprenorphine"),
+  "Naltrexone"    = c("Opioid", "Methadone", "Buprenorphine"),
+  "Not treated"   = c("Opioid", "Methadone", "Buprenorphine")
+)
+```
+
+Now we extract the treatment groups for each clinical trial, so that we can mark "illicit" buprenorphone and methadone appropriately.
+```{r treatment-groups}
+treatGroups_ls <-
+  public.ctn0094data::randomization %>%
+  filter(who %in% examplePeople_int) %>% 
+  filter(which == 1) %>%
+  left_join(everybody, by = "who") %>%
+  select(who, treatment) %>%
+  mutate(
+    treat_drug = case_when(
+      str_detect(treatment, "BUP") ~ "Buprenorphine",
+      treatment == "Methadone" ~ "Methadone",
+      treatment == "Inpatient NR-NTX" ~ "Naltrexone"
+    )
+  ) %>%
+  select(-treatment) %>%
+  split(f = .$treat_drug) %>%
+  map(.f = "who")
+
+# Inspect
+treatGroups_ls
+```
+
+This shows us which participants were assigned to buprenorphine, methadone, and naltrexone, respectively. We can now compare the substances present in urine against the substances the participants are supposed to have in their urine. For more information, see the documentation for the `MarkUse()` function.
+```{r mark-non-study-drug-use}
+opioidUse_df <-
+  udsUse2_df %>%
+  mutate(
+    treat_group = case_when(
+      who %in% treatGroups_ls$Buprenorphine ~ "Buprenorphine",
+      who %in% treatGroups_ls$Methadone     ~ "Methadone",
+      who %in% treatGroups_ls$Naltrexone    ~ "Naltrexone",
+      TRUE                                  ~ "Not treated"
+    )
+  ) %>%
+  split(f = .$treat_group) %>%
+  # List of data in alphabetical order, so the non-study drugs ls should match
+  map2(
+    .y = nonStudyOpioids_ls,
+    .f = ~{
+      # REQUIRES "source" COLUMN
+      MarkUse(
+        targetDrugs_char = .y,
+        drugs_df = .x
+      ) %>%
+        mutate(udsOpioid = TRUE)
+    }
+  ) %>%
+  bind_rows() %>%
+  select(who, when, udsOpioid)
+```
+
+
+
 
 -------------------------------------------------------------------------------
 
