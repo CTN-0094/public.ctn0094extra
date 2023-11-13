@@ -7,7 +7,8 @@
 MarkUse(
   targetDrugs_char,
   drugs_df = NULL,
-  reportSource = c("TFB", "UDSAB", "UDS")
+  reportSource = c("TFB", "UDSAB", "UDS"),
+  retainEmptyRows = FALSE
 )
 }
 \arguments{
@@ -23,6 +24,14 @@ was recorded}
 \item{reportSource}{A character vector matching the source of the reported
 drug use. The options must be from Timeline Followback (\code{"TFB"})
 questionnaires or daily urine drug screens (\code{"UDS"} or\code{"UDSAB"}).}
+
+\item{retainEmptyRows}{A logical flag to force rows for participants who did
+not have UDS positive for the substances listed in \code{targetDrugs_char}
+to be retained in the final results (with \code{NA} for \code{"when"} and
+\code{"source"}). Defaults to \code{FALSE} because the entire point of
+this function is to mark substance \emph{USE}, not a lack thereof;
+however, this flag is needed for the vignette (because we forced the
+inclusion of a participant with no recorded UDS for pedagogical purposes).}
 }
 \value{
 A modification of the \code{drugs_df} data set: the columns are

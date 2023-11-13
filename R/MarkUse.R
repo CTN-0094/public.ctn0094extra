@@ -10,6 +10,13 @@
 #' @param reportSource A character vector matching the source of the reported
 #'    drug use. The options must be from Timeline Followback (\code{"TFB"})
 #'    questionnaires or daily urine drug screens (\code{"UDS"} or\code{"UDSAB"}).
+#' @param retainEmptyRows A logical flag to force rows for participants who did
+#'    not have UDS positive for the substances listed in \code{targetDrugs_char}
+#'    to be retained in the final results (with \code{NA} for \code{"when"} and
+#'    \code{"source"}). Defaults to \code{FALSE} because the entire point of
+#'    this function is to mark substance \emph{USE}, not a lack thereof;
+#'    however, this flag is needed for the vignette (because we forced the
+#'    inclusion of a participant with no recorded UDS for pedagogical purposes).
 #'
 #' @return A modification of the \code{drugs_df} data set: the columns are
 #'    \code{"who"}, \code{"when"}, and \code{"source"}; each row corresponds
@@ -23,7 +30,8 @@
 #'
 #' @importFrom magrittr `%>%`
 #' @importFrom tibble as_tibble
-#' @importFrom dplyr filter select distinct arrange
+#' @importFrom dplyr filter select distinct arrange left_join
+#' @importFrom tidyr drop_na
 #'
 #' @export
 #'
@@ -31,7 +39,8 @@
 #'    MarkUse(c("Crack", "Pcp", "Opioid"))
 MarkUse <- function(targetDrugs_char,
                     drugs_df = NULL,
-                    reportSource = c("TFB", "UDSAB", "UDS")){
+                    reportSource = c("TFB", "UDSAB", "UDS"),
+                    retainEmptyRows = FALSE){
   # browser()
 
   ###  Get the Data  ###
@@ -52,18 +61,46 @@ MarkUse <- function(targetDrugs_char,
         call. = FALSE
       )
     }
+    drugs_df <- as_tibble(drugs_df)
 
   }
 
   ###  Match the Drug Names  ###
-  allDrugs_char <- unique(drugs_df[["what"]])
+  # This was originally simpler code, but it 1) was actually a factor, and 2)
+  #   ignored NAs
+  allDrugs_char <- 
+    drugs_df %>% 
+    select(what) %>% 
+    drop_na() %>% 
+    pull(what) %>% 
+    unique() %>% 
+    as.character()
   matchedDrugs_lgl <- targetDrugs_char %in% allDrugs_char
   if(all(!matchedDrugs_lgl)){
-    stop(
+    
+  #   stop(
+  #     "No matching drugs found. If you are using the default data set, please
+  # see the help file for a list of possible drug choices.",
+  #     call. = FALSE
+  #   )
+    warning(
       "No matching drugs found. If you are using the default data set, please
   see the help file for a list of possible drug choices.",
       call. = FALSE
     )
+    
+    out_df <- 
+      drugs_df %>%
+      select(who) %>%
+      distinct() %>%
+      # Sort to keep with the same behaviour as the remainder of the function
+      arrange(who) %>% 
+      mutate(
+        when = NA_real_,
+        source = NA_character_
+      )
+    return(out_df)
+    
   } else if(any(!matchedDrugs_lgl)) {
 
     warning(
@@ -80,11 +117,20 @@ MarkUse <- function(targetDrugs_char,
 
   ###  Filter the Data  ###
   who <- when <- what <- source <- NULL
-  drugs_df %>%
-    as_tibble() %>%
+  out_df <- 
+    drugs_df %>%
     filter(what %in% keptDrugs_char) %>%
     select(who, when, source) %>%
     distinct() %>%
     arrange(who, when)
+  
+  if(retainEmptyRows) {
+    drugs_df %>% 
+      select(who) %>% 
+      distinct() %>% 
+      left_join(out_df, by = "who")
+  } else {
+    out_df
+  }
 
 }

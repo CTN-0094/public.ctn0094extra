@@ -434,12 +434,20 @@ opioidUse_df <-
       # REQUIRES "source" COLUMN
       MarkUse(
         targetDrugs_char = .y,
-        drugs_df = .x
-      ) %>%
-        mutate(udsOpioid = TRUE)
+        drugs_df = .x,
+        # because we have participants with no recorded UDS; in practice DO NOT
+        #   use this command
+        retainEmptyRows = TRUE
+      ) 
     }
   ) %>%
   bind_rows() %>%
+  mutate(
+    udsOpioid = case_when(
+       is.na(when) ~ NA,
+      !is.na(when) ~ TRUE
+    )
+  ) %>% 
   select(who, when, udsOpioid)
 ```
 

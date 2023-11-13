@@ -1,7 +1,7 @@
 Package: public.ctn0094extra
 Title: Helper Files for the CTN-0094 Relational Database
-Version: 1.0.1
-Date: 2023-09-21
+Version: 1.0.2
+Date: 2023-11-13
 Authors@R: 
     c(
       person(
@@ -36,14 +36,14 @@ Imports:
     magrittr,
     purrr,
     tibble,
+    tidyr,
     utils
 Suggests: 
     knitr, 
     kableExtra,
     rmarkdown,
     scales,
-    stringr,
-    tidyr
+    stringr
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 VignetteBuilder: knitr
