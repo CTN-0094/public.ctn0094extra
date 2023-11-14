@@ -17,7 +17,7 @@
 #'    one record per person in each study for each day in those studies (when
 #'    \code{persons_df} is set to \code{"everybody"}), or it creates one record
 #'    per person contained in the table \code{persons_df} for each day in those
-#'    studies. The default behaviour is to use the supplied \code{"everybody"}
+#'    studies. The default behavior is to use the supplied \code{"everybody"}
 #'    table for all consenting subjects in the CTN-0027, CTN-0030, and CTN-0051
 #'    clinical trials. However, users may only care about a smaller subset of
 #'    these patients, so a subset of the \code{"everybody"} data frame can be

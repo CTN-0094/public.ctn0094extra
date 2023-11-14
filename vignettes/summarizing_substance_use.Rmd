@@ -315,7 +315,7 @@ This step is the most involved, so we will only show the steps necessary to comp
 1. Determine which treatment arm to which each participant was assigned. Recall that buprenorphine can be used both as a standard treatment and an illicit substance. Therefore, having a TLFB record of or UDS positive for buprenorphine for a particular study day should not automatically be counted as "substance misuse".
 2. For the substance(s) of interest (in our case, opioids), indicate their presence (or absence) in participants' data streams for each study visit day. This will result in a "long" data table with one row per participant per study visit and a logical value indicating if the participant used the substance(s) of interest on that day.
 3. Create a "ticker" of study days, then partition these days into study weeks. For an "intent to treat" analysis, day 0 should be the randomization day. Otherwise, day 0 should be the induction day calculated above. *Note: we will use an "intent to treat" analysis from this point on.*
-4. Summarize substance use within each study week using a [quinary word](https://doi.org/10.1371/journal.pone.0291248). For many participants, they have at least one week wherein more than one UDS sample was supplied. Our combination logic to summarise detected weekly substance use is as follows: if all UDS samples within that study week are positive for the substance(s) of interest, then the week is marked "+". If all UDS samples are negative for the substance(s) of interest, then the week is marked "-". If there is a mixture, the week is marked "\*". If the participant was supposed to supply a urine sample in that week but did not, then the week is marked "o". If the participant was not supposed to supply a urine sample in that week (and did not supply one), then the week is marked "\_".
+4. Summarize substance use within each study week using a [quinary word](https://doi.org/10.1371/journal.pone.0291248). For many participants, they have at least one week wherein more than one UDS sample was supplied. Our combination logic to summarize detected weekly substance use is as follows: if all UDS samples within that study week are positive for the substance(s) of interest, then the week is marked "+". If all UDS samples are negative for the substance(s) of interest, then the week is marked "-". If there is a mixture, the week is marked "\*". If the participant was supposed to supply a urine sample in that week but did not, then the week is marked "o". If the participant was not supposed to supply a urine sample in that week (and did not supply one), then the week is marked "\_".
 5. Group these weekly summaries into trial phase (baseline / pre-randomization, phase 1, or phase 2 [CTN-0030 only]) and collapse into a single string.
 
 You may have participants who consented to join the trial but were never randomized to a treatment arm. For these individuals, if a "complete study summary" is required (that is, you must include all participants who consented, even if they never were randomized), we recommend creating a use pattern word which is either all "o" or all "\_".
@@ -392,7 +392,7 @@ nonStudyOpioids_ls <- list(
 )
 ```
 
-Now we extract the treatment groups for each clinical trial, so that we can mark "illicit" buprenorphone and methadone appropriately.
+Now we extract the treatment groups for each clinical trial, so that we can mark "illicit" buprenorphine and methadone appropriately.
 ```{r treatment-groups}
 treatGroups_ls <-
   public.ctn0094data::randomization %>%
@@ -628,7 +628,7 @@ derived_weeklyOpioidPatternRand <-
 
 
 ## Symbolically Summarize Non-Randomized Participants UDS by Study Week
-There are some strange cases where non-randomized participants also submitted UDS samples during the clinical trial. We will also create quinary words for these participants, but note that most of the UDS results will be missing (symoblized by "o").
+There are some strange cases where non-randomized participants also submitted UDS samples during the clinical trial. We will also create quinary words for these participants, but note that most of the UDS results will be missing (symbolized by "o").
 ```{r mark-use-non-randomized}
 nonRandUDS_df <-
 	backbone_df %>%

@@ -1,6 +1,6 @@
 #' @title Derived Patient Race and Ethnicity Data
 #'
-#' @description Summarise the patients' self-reported race and ethnicity into
+#' @description Summarize the patients' self-reported race and ethnicity into
 #'    four groups: "Non-Hispanic White", "Non-Hispanic Black", "Hispanic", and
 #'    "Other".
 #'

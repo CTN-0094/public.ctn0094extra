@@ -10,7 +10,7 @@ Because this is the "Extra" package which supplements the information in the pri
 install.packages("public.ctn0094data")
 ```
 
-If you have access to the GitHub repo for the development version of this data package, use the [remotes](https://CRAN.R-project.org/package=remotes) package to install the data package from GitHub:
+If you have access to the GitHub repository for the development version of this data package, use the [remotes](https://CRAN.R-project.org/package=remotes) package to install the data package from GitHub:
 ```r
 remotes::install_github('https://github.com/CTN-0094/public.ctn0094data')
 ```

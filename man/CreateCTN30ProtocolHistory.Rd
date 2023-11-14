@@ -42,7 +42,7 @@ For subjects who consented to treatment but were never randomized, we use
 an "intent to treat" philosophy and assign them an empty protocol timeline
 starting on the day of consent (day 0) until \code{phase1Len_int}.
 
-NOTE: We expect this function to be used speciifically to create a
+NOTE: We expect this function to be used specifically to create a
 potential visit backbone for CTN-0030. For studies with fixed protocol
 lengths, please use \code{CreateSubjectHistory()} instead.
 }

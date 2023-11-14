@@ -19,7 +19,7 @@ and "Refused/missing".}
 data(derived_raceEthnicity)
 }
 \description{
-Summarise the patients' self-reported race and ethnicity into
+Summarize the patients' self-reported race and ethnicity into
 four groups: "Non-Hispanic White", "Non-Hispanic Black", "Hispanic", and
 "Other".
 }

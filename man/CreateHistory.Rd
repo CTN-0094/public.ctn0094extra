@@ -36,7 +36,7 @@ Create a Subject History Table
 \details{
 We may want to perform SQL-like operations on a set of tables. This
 data table will form the "backbone" for future join operations. It creates
-one record per person for each day in the study. The default behaviour is
+one record per person for each day in the study. The default behavior is
 to set the date range to the smallest observed value for "when" across all
 data tables to the largest observed value for "when" across all tables,
 inclusive. Necessarily, this is \emph{very} sensitive to outliers or
@@ -44,7 +44,7 @@ coding errors (for instance, if one subject has a "first day" 200 days
 before Study Day 0, then this History table will include days -200 to -1
 for ALL subjects, regardless of any recorded contact in this period).
 
-If this behaviour is not desirable, you must specify a study range. For
+If this behavior is not desirable, you must specify a study range. For
 example, you may have a short recruitment period followed by a 6-month
 clinical trial. In this instance, you may want to ignore any data more
 than 30 days prior to Study Day 0 for each subject or more than a few

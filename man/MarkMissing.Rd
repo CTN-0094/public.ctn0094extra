@@ -10,7 +10,7 @@ MarkMissing(timeline_df, windowWidth = 7, daysGrace = 0)
 \item{timeline_df}{A data frame with columns \code{who}, \code{when},
 \code{visit} and \code{randomized}. This data frame measures on which days
 the subjects visited the clinic (\code{visit}) and indicates when the
-subjects were randomised to Phase I of their respective studies (the
+subjects were randomized to Phase I of their respective studies (the
 \code{randomized} column). This data set will contain one (and only one)
 record per subject per day; and enough rows to cover all potential visits
 per the protocol length of the study.}
@@ -19,7 +19,7 @@ per the protocol length of the study.}
 to 7, representing weekly clinic visits.}
 
 \item{daysGrace}{How many days late are subjects allowed to be for their
-weekly visit. Defaults to 0. Under this default behaviour with weekly
+weekly visit. Defaults to 0. Under this default behavior with weekly
 visits, a subject who visits the clinic on days 8 and 14 instead of days
 7 and 14 will have a missing visit imputed for day 7.}
 }
@@ -41,7 +41,7 @@ of randomization". Given a table of subject visits by day over the entire
 protocol timeline, this function will estimate when each subject missed a
 clinic visit (unfortunately, missed visits can often be improperly
 recorded in the patient logs; if such information is complete, using this
-function is unneccessary).
+function is unnecessary).
 
 This estimation is conducted as follows: (1) first, for each subject, a
 regular grid of days is spread from the randomization day to the end of
