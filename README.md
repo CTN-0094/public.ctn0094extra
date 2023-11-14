@@ -5,7 +5,12 @@
 These are helper functions for the CTN-0094 data package `public.ctn0094data` and supplemental engineered / derived data sets.
 
 ### Installing Dependencies
-Because this is the "Extra" package which supplements the information in the primary `public.ctn0094data::` package, we must have the most recent version of this primary data package built first. If you have access to the GitHub repo for the data package, use the [remotes](https://CRAN.R-project.org/package=remotes) package to install the data package from GitHub:
+Because this is the "Extra" package which supplements the information in the primary `public.ctn0094data::` package, we must have the most recent version of this primary data package built first. This package is on [CRAN](https://CRAN.R-project.org) at <https://CRAN.R-project.org/package=public.ctn0094data>, so you can install this data package with:
+``` r
+install.packages("public.ctn0094data")
+```
+
+If you have access to the GitHub repo for the development version of this data package, use the [remotes](https://CRAN.R-project.org/package=remotes) package to install the data package from GitHub:
 ```r
 remotes::install_github('https://github.com/CTN-0094/public.ctn0094data')
 ```
@@ -19,16 +24,11 @@ install.packages(
 )
 ```
 
-Once `public.ctn0094data` is on [CRAN](https://CRAN.R-project.org), you will be able to install this data package with:
-``` r
-# Do not run yet
-# install.packages("public.ctn0094data")
-```
 
 ### Installing this Package
 Once you have the `public.ctn0094data` package downloaded and installed on your computer, you can install this package. For now, use the `remotes` package to install this package directly from GitHub via
 ```r
-remotes::install_github('https://github.com/CTN-0094/public.ctn0094data')
+remotes::install_github('https://github.com/CTN-0094/public.ctn0094extra')
 ```
 
 Once `public.ctn0094data` and `public.ctn0094extra` have been released on CRAN, you will be able to install this package with:
