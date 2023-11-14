@@ -65,7 +65,7 @@
                         <h4 data-toc-skip class="author">Gabriel Odom
 and Raymond Balise</h4>
             
-            <h4 data-toc-skip class="date">2023-11-13</h4>
+            <h4 data-toc-skip class="date">2023-11-14</h4>
       
       
       <div class="d-none name"><code>summarizing_substance_use.Rmd</code></div>
@@ -226,7 +226,11 @@ assigned study drug days after they were assigned to a treatment arm. If
 the subject supplies a UDS sample positive for substances of interest or
 records a substance use event in the TLFB after they were assigned to
 treatment but before they received treatment, these should not count
-against the efficacy of the study drug.</p>
+against the efficacy of the study drug. <strong>NOTE: under the “intent
+to treat” paradigm, this is not the case. For example, it is challenging
+for some patients to start treatment with Naltrexone, so evaluating
+treatment efficacy fairly often requires us to include this time after
+treatment assignment but before induction.</strong></p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">inductDelay_df</span> <span class="op">&lt;-</span></span>
 <span>  <span class="va">treatTimeLong_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
@@ -759,7 +763,365 @@ documentation for the <code><a href="../reference/MarkUse.html">MarkUse()</a></c
 <span>      <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">when</span><span class="op">)</span> <span class="op">~</span> <span class="cn">TRUE</span></span>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">who</span>, <span class="va">when</span>, <span class="va">udsOpioid</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">who</span>, <span class="va">when</span>, <span class="va">udsOpioid</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: The following drugs were not matched: Methadone. Please check for</span></span>
+<span><span class="co">#&gt; possible spelling/capitalization errors.</span></span>
+<span><span class="co">#&gt; Warning: The following drugs were not matched: Buprenorphine. Please check for</span></span>
+<span><span class="co">#&gt; possible spelling/capitalization errors.</span></span>
+<span><span class="co">#&gt; Warning: The following drugs were not matched: Opioid, Methadone. Please check</span></span>
+<span><span class="co">#&gt; for possible spelling/capitalization errors.</span></span>
+<span><span class="co">#&gt; Warning: No matching drugs found. If you are using the default data set, please</span></span>
+<span><span class="co">#&gt;   see the help file for a list of possible drug choices.</span></span></code></pre></div>
+<p>All of the drugs marked above would still be individual rows, so we
+want to get back to “one row per person per day”</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">timelineUDS_df</span> <span class="op">&lt;-</span></span>
+<span>    <span class="va">udsUse2_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">opioidUse_df</span>, by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"who"</span>, <span class="st">"when"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">what</span>, <span class="op">-</span><span class="va">source</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="co"># 2,089 rows to 1,994</span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/distinct.html" class="external-link">distinct</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/rm.html" class="external-link">rm</a></span><span class="op">(</span></span>
+<span>  <span class="va">derived_visitImputed</span>, <span class="va">opioidUse_df</span>, <span class="va">randomized_df</span>, <span class="va">treatGroups_ls</span>, <span class="va">udsUse2_df</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="counting-days-since-randomization">Counting Days Since Randomization<a class="anchor" aria-label="anchor" href="#counting-days-since-randomization"></a>
+</h3>
+<p>Do we state that by definition any person who wasn’t randomized is an
+early treatment failure? In the sense of evaluating treatment efficacy,
+yes; in evaluating the subject, no. Regardless, no matter the treatment
+outcome definition, participants without a randomization date will be
+listed as treatment failures under the “intent to treat” paradigm.</p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">wasRandomized_int</span> <span class="op">&lt;-</span></span>
+<span>    <span class="va">timelineUDS_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">who</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span>randomized <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/any.html" class="external-link">any</a></span><span class="op">(</span><span class="va">randomized</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">randomized</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/pull.html" class="external-link">pull</a></span><span class="op">(</span><span class="va">who</span><span class="op">)</span></span>
+<span><span class="va">notRandomized_int</span> <span class="op">&lt;-</span></span>
+<span>    <span class="va">timelineUDS_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span> <span class="op">!</span><span class="op">(</span><span class="va">who</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">wasRandomized_int</span><span class="op">)</span> <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/pull.html" class="external-link">pull</a></span><span class="op">(</span><span class="va">who</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Was randomized:</span></span>
+<span><span class="va">wasRandomized_int</span></span>
+<span><span class="co">#&gt; [1]    4   13   17  163  210  233  242 1103 2089</span></span>
+<span></span>
+<span><span class="co"># Wasn't</span></span>
+<span><span class="va">notRandomized_int</span></span>
+<span><span class="co">#&gt; [1] 1</span></span></code></pre></div>
+<p>Now we need a Study Day ticker (for randomized subjects only). Recall
+that CTN-0030 trial participants potentially have 2 randomization
+days.</p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">timelineUDS2_df</span> <span class="op">&lt;-</span></span>
+<span>    <span class="va">timelineUDS_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">who</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">wasRandomized_int</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">who</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">randomized</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>        whenRandomized1 <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span><span class="va">randomized</span> <span class="op">==</span> <span class="fl">1</span> <span class="op">~</span> <span class="va">when</span><span class="op">)</span>,</span>
+<span>        whenRandomized2 <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span><span class="va">randomized</span> <span class="op">==</span> <span class="fl">2</span> <span class="op">~</span> <span class="va">when</span><span class="op">)</span></span>
+<span>    <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">who</span>, <span class="va">when</span>, <span class="va">whenRandomized1</span>, <span class="va">whenRandomized2</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">timelineUDS_df</span>, <span class="va">.</span>, by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"who"</span>, <span class="st">"when"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">who</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">wasRandomized_int</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="co"># Add back in the groupings BEFORE the fill()</span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">who</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://tidyr.tidyverse.org/reference/fill.html" class="external-link">fill</a></span><span class="op">(</span><span class="va">whenRandomized1</span>, .direction <span class="op">=</span> <span class="st">"updown"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://tidyr.tidyverse.org/reference/fill.html" class="external-link">fill</a></span><span class="op">(</span><span class="va">whenRandomized2</span>, .direction <span class="op">=</span> <span class="st">"updown"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>daysSinceRand1 <span class="op">=</span> <span class="va">when</span> <span class="op">-</span> <span class="va">whenRandomized1</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>daysSinceRand2 <span class="op">=</span> <span class="va">when</span> <span class="op">-</span> <span class="va">whenRandomized2</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">whenRandomized1</span>, <span class="op">-</span><span class="va">whenRandomized2</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="symbolically-summarize-participant-uds-by-study-week">Symbolically Summarize Participant UDS by Study Week<a class="anchor" aria-label="anchor" href="#symbolically-summarize-participant-uds-by-study-week"></a>
+</h3>
+<p>We puts the first day of “study week 1” on the day after
+randomization, not on the day of consent, but consent could have been
+signed also on the same day as randomization.</p>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">weeklyUse_df</span> <span class="op">&lt;-</span></span>
+<span>  <span class="va">timelineUDS2_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="co"># The (daysSinceRand1 - 1) adjustment is to ensure that the first study week</span></span>
+<span>  <span class="co">#   is a full 7 days, since "day 0" is the day before randomization. The "+1"</span></span>
+<span>  <span class="co">#   at the end is to shift the study week label such that "week 0" is the </span></span>
+<span>  <span class="co">#   week *BEFORE* treatment, rather than the first week of treatment. So, the</span></span>
+<span>  <span class="co">#   randomization day is the last day of "week 0" (the pre-treatment period).</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>studyWeek1 <span class="op">=</span> <span class="op">(</span><span class="va">daysSinceRand1</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%/%</a></span> <span class="fl">7</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>studyWeek2 <span class="op">=</span> <span class="op">(</span><span class="va">daysSinceRand2</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%/%</a></span> <span class="fl">7</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">who</span>, <span class="va">studyWeek1</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="co"># There are some study weeks with multiple UDS, so we count the number of</span></span>
+<span>  <span class="co">#   positive and negative UDS per week.</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span></span>
+<span>    nPosUDS  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">udsOpioid</span> <span class="op">==</span> <span class="fl">1</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    nNegUDS  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">visitImputed</span> <span class="op">==</span> <span class="st">"Present"</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">udsOpioid</span><span class="op">)</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    nMissing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">visitImputed</span> <span class="op">==</span> <span class="st">"Missing"</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    randWk1  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">randomized</span> <span class="op">==</span> <span class="fl">1</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span>,</span>
+<span>    randWk2  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">randomized</span> <span class="op">==</span> <span class="fl">2</span> <span class="op">&amp;</span> <span class="va">project</span> <span class="op">==</span> <span class="st">"30"</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>Now we assign a single symbol to represent the UDS results for each
+participant week. The symbols are (+) for only positive UDS, (–) only
+negative UDS, (*) at least one of each positive and negative UDS, (o)
+UDS required but not collected, or (_) UDS not required.</p>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">useByWeekRandomized_df</span> <span class="op">&lt;-</span></span>
+<span>  <span class="va">weeklyUse_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>        udsStatus <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
+<span>            <span class="co"># If we see a positive UDS and no negative UDS, it's positive</span></span>
+<span>            <span class="va">nPosUDS</span> <span class="op">&gt;</span> <span class="fl">0</span>  <span class="op">&amp;</span> <span class="va">nNegUDS</span> <span class="op">==</span> <span class="fl">0</span> <span class="op">~</span> <span class="st">"+"</span>,</span>
+<span>            <span class="co"># If we see a negative UDS and no positive UDS, it's negative</span></span>
+<span>            <span class="va">nPosUDS</span> <span class="op">==</span> <span class="fl">0</span> <span class="op">&amp;</span> <span class="va">nNegUDS</span> <span class="op">&gt;</span> <span class="fl">0</span>  <span class="op">~</span> <span class="st">"-"</span>,</span>
+<span>            <span class="co"># If we see both positive and negative UDS in a single week, it's both</span></span>
+<span>            <span class="co">#   (note that we can recode all "B"s to be "+" as necessary)</span></span>
+<span>            <span class="va">nPosUDS</span> <span class="op">&gt;</span> <span class="fl">0</span>  <span class="op">&amp;</span> <span class="va">nNegUDS</span> <span class="op">&gt;</span> <span class="fl">0</span>  <span class="op">~</span> <span class="st">"*"</span>,</span>
+<span>            <span class="co"># If we don't have any UDS in a week after randomization, it's missing</span></span>
+<span>            <span class="co"># UPDATE 2022-03-08: I had this as a 0 originally, and I was using this</span></span>
+<span>            <span class="co">#   in context of consent, not randomization. This was wrong.</span></span>
+<span>            <span class="va">nPosUDS</span> <span class="op">==</span> <span class="fl">0</span> <span class="op">&amp;</span> <span class="va">nNegUDS</span> <span class="op">==</span> <span class="fl">0</span> <span class="op">&amp;</span> <span class="va">studyWeek1</span> <span class="op">&gt;=</span> <span class="fl">1</span> <span class="op">~</span> <span class="st">"o"</span>,</span>
+<span>            <span class="co"># If none of the above are true, but we still have a missing value as</span></span>
+<span>            <span class="co">#   marked by the MarkMissing() function, then it's missing</span></span>
+<span>            <span class="va">nMissing</span> <span class="op">&gt;</span> <span class="fl">0</span> <span class="op">~</span> <span class="st">"o"</span>,</span>
+<span>            <span class="co"># If none of the above conditions are true (probably because it's a week</span></span>
+<span>            <span class="co">#   before randomization but not during a baseline visit for consent),</span></span>
+<span>            <span class="co">#   then leave it blank (pre-study)</span></span>
+<span>            <span class="cn">TRUE</span> <span class="op">~</span> <span class="st">"_"</span></span>
+<span>        <span class="op">)</span></span>
+<span>    <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">who</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="co"># For CTN-0030, Phase II could have started on any day of the week, even in</span></span>
+<span>  <span class="co">#   the middle of a treatment week. If we try to start counting Phase II</span></span>
+<span>  <span class="co">#   weeks the day after treatment arms are switched, we can end up with the</span></span>
+<span>  <span class="co">#   last "week" of Phase I not having 7 days. I'm going to leave the first</span></span>
+<span>  <span class="co">#   week of Phase II as whatever week the switch happened in.</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    rand1Active <span class="op">=</span> <span class="va">studyWeek1</span> <span class="op">&gt;</span> <span class="fl">0</span>,</span>
+<span>    <span class="co"># This returns 0 for any week before the Phase II randomization, and 1 for</span></span>
+<span>    <span class="co">#   the Phase II randomization week and all subsequent weeks (because the</span></span>
+<span>    <span class="co">#   randWk2 column is 1 only for the week of second randomization and 0 </span></span>
+<span>    <span class="co">#   all other rows).</span></span>
+<span>    rand2Active <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/cumsum.html" class="external-link">cumsum</a></span><span class="op">(</span><span class="va">randWk2</span><span class="op">)</span>,</span>
+<span>    trialPhase  <span class="op">=</span> <span class="va">rand1Active</span> <span class="op">+</span> <span class="va">rand2Active</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span></span>
+<span>      <span class="va">who</span>, studyWeek <span class="op">=</span> <span class="va">studyWeek1</span>, <span class="va">randWk1</span>, <span class="va">randWk2</span>, <span class="va">udsStatus</span>, <span class="va">trialPhase</span></span>
+<span>    <span class="op">)</span></span></code></pre></div>
+<p>We then split these rows by trial phase, and collapse the weekly
+symbols into a single string.</p>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">weeklyOpioidPatterns_df</span> <span class="op">&lt;-</span></span>
+<span>  <span class="va">useByWeekRandomized_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    phase <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
+<span>      <span class="va">trialPhase</span> <span class="op">==</span> <span class="fl">0L</span> <span class="op">~</span> <span class="st">"Baseline"</span>,</span>
+<span>      <span class="va">trialPhase</span> <span class="op">==</span> <span class="fl">1L</span> <span class="op">~</span> <span class="st">"Phase_1"</span>,</span>
+<span>      <span class="va">trialPhase</span> <span class="op">==</span> <span class="fl">2L</span> <span class="op">~</span> <span class="st">"Phase_2"</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">who</span>, <span class="va">phase</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span></span>
+<span>    usePattern <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">udsStatus</span>, collapse <span class="op">=</span> <span class="st">""</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_wider.html" class="external-link">pivot_wider</a></span><span class="op">(</span>names_from <span class="op">=</span> <span class="st">"phase"</span>, values_from <span class="op">=</span> <span class="st">"usePattern"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">weeklyOpioidPatterns_df</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 9 × 4</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># Groups:   who [9]</span></span></span>
+<span><span class="co">#&gt;     who Baseline Phase_1                  Phase_2                  </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>     4 ____-    --------------------o-oo <span style="color: #BB0000;">NA</span>                       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>    13 ____*    -------o---o-ooooooooooo <span style="color: #BB0000;">NA</span>                       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>    17 _____+-  o-++*++++++-++++++-+++-  <span style="color: #BB0000;">NA</span>                       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>   163 _____*   ----oo---o--o*-o-------o <span style="color: #BB0000;">NA</span>                       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>   210 _____*   ++++++++-+++-----o-----o <span style="color: #BB0000;">NA</span>                       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>   233 ____*    +++++++++++++++++++++++o <span style="color: #BB0000;">NA</span>                       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span>   242 ____+_   -----------------------  <span style="color: #BB0000;">NA</span>                       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span>  <span style="text-decoration: underline;">1</span>103 ____+    +o--oo--o                *+-+---o---------o-o-o-o-</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">9</span>  <span style="text-decoration: underline;">2</span>089 ____*    ++++---+---------------- <span style="color: #BB0000;">NA</span></span></span></code></pre></div>
+<p>Notice that we have the opioid UDS results for each subject by week
+split into the various phases of the clinical trial. These summaries are
+in <strong>quinary word</strong> format, following the work in Odom et
+al. (2023) [<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10490938/" class="external-link uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10490938/</a>].</p>
+<p>Our last step for the randomized participants is to mark the study
+weeks when these phases start and end.</p>
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">derived_weeklyOpioidPatternRand</span> <span class="op">&lt;-</span></span>
+<span>  <span class="va">useByWeekRandomized_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    randWeek1  <span class="op">=</span> <span class="va">randWk1</span> <span class="op">*</span> <span class="va">studyWeek</span>,</span>
+<span>    randWeek2  <span class="op">=</span> <span class="va">randWk2</span> <span class="op">*</span> <span class="va">studyWeek</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span></span>
+<span>    startWeek  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">studyWeek</span><span class="op">)</span>,</span>
+<span>    randWeek1  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">randWeek1</span><span class="op">)</span>,</span>
+<span>    randWeek2  <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span> <span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="va">randWeek2</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span>, <span class="cn">NA_real_</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">randWeek2</span><span class="op">)</span> <span class="op">)</span>,</span>
+<span>    endWeek    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">studyWeek</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="co"># View this smaller data set before joining. In practice, you can comment out</span></span>
+<span>  <span class="co">#   this print() command.</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">weeklyOpioidPatterns_df</span>, by <span class="op">=</span> <span class="st">"who"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 9 × 5</span></span></span>
+<span><span class="co">#&gt;     who startWeek randWeek1 randWeek2 endWeek</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>     4        -<span style="color: #BB0000;">4</span>         0        <span style="color: #BB0000;">NA</span>      24</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>    13        -<span style="color: #BB0000;">4</span>         0        <span style="color: #BB0000;">NA</span>      24</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>    17        -<span style="color: #BB0000;">6</span>         0        <span style="color: #BB0000;">NA</span>      23</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>   163        -<span style="color: #BB0000;">5</span>         0        <span style="color: #BB0000;">NA</span>      24</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>   210        -<span style="color: #BB0000;">5</span>         0        <span style="color: #BB0000;">NA</span>      24</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>   233        -<span style="color: #BB0000;">4</span>         0        <span style="color: #BB0000;">NA</span>      24</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span>   242        -<span style="color: #BB0000;">5</span>         0        <span style="color: #BB0000;">NA</span>      23</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span>  <span style="text-decoration: underline;">1</span>103        -<span style="color: #BB0000;">4</span>         0        10      34</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">9</span>  <span style="text-decoration: underline;">2</span>089        -<span style="color: #BB0000;">4</span>         0        <span style="color: #BB0000;">NA</span>      24</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="symbolically-summarize-non-randomized-participants-uds-by-study-week">Symbolically Summarize Non-Randomized Participants UDS by Study
+Week<a class="anchor" aria-label="anchor" href="#symbolically-summarize-non-randomized-participants-uds-by-study-week"></a>
+</h3>
+<p>There are some strange cases where non-randomized participants also
+submitted UDS samples during the clinical trial. We will also create
+quinary words for these participants, but note that most of the UDS
+results will be missing (symoblized by “o”).</p>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">nonRandUDS_df</span> <span class="op">&lt;-</span></span>
+<span>    <span class="va">backbone_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">who</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">notRandomized_int</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">uds</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="co"># MarkUse() requires a "source" column</span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>source <span class="op">=</span> <span class="st">"UDS"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="../reference/MarkUse.html">MarkUse</a></span><span class="op">(</span></span>
+<span>        targetDrugs_char <span class="op">=</span> <span class="va">nonStudyOpioids_ls</span><span class="op">$</span><span class="va">`Not treated`</span>,</span>
+<span>        drugs_df <span class="op">=</span> <span class="va">.</span></span>
+<span>    <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    udsOpioid <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
+<span>      <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">when</span><span class="op">)</span> <span class="op">~</span> <span class="cn">TRUE</span>,</span>
+<span>       <span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">when</span><span class="op">)</span> <span class="op">~</span> <span class="cn">NA</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">who</span>, <span class="va">when</span>, <span class="va">udsOpioid</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="co"># Uneccessary here, but some UDS records are duplicated</span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/distinct.html" class="external-link">distinct</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>Although not present in this small data example, there are positive
+UDS events among the non-randomized. We then construct a “study week”
+ticker to mark such weekly UDS results.</p>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">timelineNonRandUDS_df</span> <span class="op">&lt;-</span></span>
+<span>    <span class="va">backbone_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">who</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">notRandomized_int</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">nonRandUDS_df</span>, by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"who"</span>, <span class="st">"when"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="co"># Because this week moves off of the consent date, there is no reason to add</span></span>
+<span>  <span class="co">#   a `(week - 1)` adjustment</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>studyWeek <span class="op">=</span> <span class="va">when</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%/%</a></span> <span class="fl">7</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">who</span>, <span class="va">studyWeek</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span></span>
+<span>        posUDS  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">udsOpioid</span> <span class="op">==</span> <span class="fl">1</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span></span>
+<span>    <span class="op">)</span></span></code></pre></div>
+<p>For these participants who were not randomized at all, they will only
+have “Phase I” missing values.</p>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">weeklyNonRandPatterns_df</span> <span class="op">&lt;-</span></span>
+<span>  <span class="va">timelineNonRandUDS_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    udsStatus <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
+<span>      <span class="co"># If they are positive, they are positive</span></span>
+<span>      <span class="va">posUDS</span> <span class="op">~</span> <span class="st">"+"</span>,</span>
+<span>      <span class="co"># If they aren't positive and it's after the consent week, they are</span></span>
+<span>      <span class="co">#   missing (because they weren't randomized)</span></span>
+<span>      <span class="op">!</span><span class="va">posUDS</span> <span class="op">&amp;</span> <span class="va">studyWeek</span> <span class="op">&gt;=</span> <span class="fl">1</span> <span class="op">~</span> <span class="st">"o"</span>,</span>
+<span>      <span class="co"># If they aren't positive and it's on or before the consent week, then</span></span>
+<span>      <span class="co">#   leave it blank (pre-study)</span></span>
+<span>      <span class="op">!</span><span class="va">posUDS</span> <span class="op">&amp;</span> <span class="va">studyWeek</span> <span class="op">&lt;</span> <span class="fl">1</span> <span class="op">~</span> <span class="st">"_"</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    phase <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/case_when.html" class="external-link">case_when</a></span><span class="op">(</span></span>
+<span>      <span class="va">studyWeek</span> <span class="op">&lt;</span>  <span class="fl">1</span> <span class="op">~</span> <span class="st">"Baseline"</span>,</span>
+<span>      <span class="va">studyWeek</span> <span class="op">&gt;=</span> <span class="fl">1</span> <span class="op">~</span> <span class="st">"Phase_1"</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="co"># Again, this print is unecessary, but here it make clear what we are doing</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">who</span>, <span class="va">phase</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span></span>
+<span>    usePattern <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">udsStatus</span>, collapse <span class="op">=</span> <span class="st">""</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_wider.html" class="external-link">pivot_wider</a></span><span class="op">(</span>names_from <span class="op">=</span> <span class="st">"phase"</span>, values_from <span class="op">=</span> <span class="st">"usePattern"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">ungroup</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 20 × 5</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># Groups:   who [1]</span></span></span>
+<span><span class="co">#&gt;      who studyWeek posUDS udsStatus phase   </span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span>     1        -<span style="color: #BB0000;">4</span> FALSE  _         Baseline</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span>     1        -<span style="color: #BB0000;">3</span> FALSE  _         Baseline</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span>     1        -<span style="color: #BB0000;">2</span> FALSE  _         Baseline</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span>     1        -<span style="color: #BB0000;">1</span> FALSE  _         Baseline</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span>     1         0 FALSE  _         Baseline</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span>     1         1 FALSE  o         Phase_1 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span>     1         2 FALSE  o         Phase_1 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span>     1         3 FALSE  o         Phase_1 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span>     1         4 FALSE  o         Phase_1 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span>     1         5 FALSE  o         Phase_1 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">11</span>     1         6 FALSE  o         Phase_1 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">12</span>     1         7 FALSE  o         Phase_1 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">13</span>     1         8 FALSE  o         Phase_1 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">14</span>     1         9 FALSE  o         Phase_1 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">15</span>     1        10 FALSE  o         Phase_1 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">16</span>     1        11 FALSE  o         Phase_1 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">17</span>     1        12 FALSE  o         Phase_1 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">18</span>     1        13 FALSE  o         Phase_1 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">19</span>     1        14 FALSE  o         Phase_1 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">20</span>     1        15 FALSE  o         Phase_1</span></span>
+<span></span>
+<span><span class="va">weeklyNonRandPatterns_df</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 3</span></span></span>
+<span><span class="co">#&gt;     who Baseline Phase_1        </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>     1 _____    ooooooooooooooo</span></span></code></pre></div>
+<p>Finally, we add in the start and end weeks for these two phases.</p>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">derived_weeklyOpioidPatternNonRand</span> <span class="op">&lt;-</span></span>
+<span>  <span class="va">timelineNonRandUDS_df</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">who</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span></span>
+<span>    startWeek  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">studyWeek</span><span class="op">)</span>,</span>
+<span>    randWeek1  <span class="op">=</span> <span class="cn">NA_real_</span>,</span>
+<span>    randWeek2  <span class="op">=</span> <span class="cn">NA_real_</span>,</span>
+<span>    endWeek    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">studyWeek</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">weeklyNonRandPatterns_df</span>, by <span class="op">=</span> <span class="st">"who"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="final-product">Final Product<a class="anchor" aria-label="anchor" href="#final-product"></a>
+</h3>
+<p>At the end of this very long process, we have this:</p>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">derived_weeklyOpioidPattern</span> <span class="op">&lt;-</span></span>
+<span>    <span class="va">derived_weeklyOpioidPatternRand</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span><span class="va">derived_weeklyOpioidPatternNonRand</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="va">who</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/replace_na.html" class="external-link">replace_na</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Phase_2 <span class="op">=</span> <span class="st">""</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">derived_weeklyOpioidPattern</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 10 × 8</span></span></span>
+<span><span class="co">#&gt;      who startWeek randWeek1 randWeek2 endWeek Baseline Phase_1          Phase_2</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span>     1        -<span style="color: #BB0000;">4</span>        <span style="color: #BB0000;">NA</span>        <span style="color: #BB0000;">NA</span>      15 _____    ooooooooooooooo  <span style="color: #949494;">""</span>     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span>     4        -<span style="color: #BB0000;">4</span>         0        <span style="color: #BB0000;">NA</span>      24 ____-    ---------------… <span style="color: #949494;">""</span>     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span>    13        -<span style="color: #BB0000;">4</span>         0        <span style="color: #BB0000;">NA</span>      24 ____*    -------o---o-oo… <span style="color: #949494;">""</span>     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span>    17        -<span style="color: #BB0000;">6</span>         0        <span style="color: #BB0000;">NA</span>      23 _____+-  o-++*++++++-+++… <span style="color: #949494;">""</span>     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span>   163        -<span style="color: #BB0000;">5</span>         0        <span style="color: #BB0000;">NA</span>      24 _____*   ----oo---o--o*-… <span style="color: #949494;">""</span>     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span>   210        -<span style="color: #BB0000;">5</span>         0        <span style="color: #BB0000;">NA</span>      24 _____*   ++++++++-+++---… <span style="color: #949494;">""</span>     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span>   233        -<span style="color: #BB0000;">4</span>         0        <span style="color: #BB0000;">NA</span>      24 ____*    +++++++++++++++… <span style="color: #949494;">""</span>     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span>   242        -<span style="color: #BB0000;">5</span>         0        <span style="color: #BB0000;">NA</span>      23 ____+_   ---------------… <span style="color: #949494;">""</span>     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span>  <span style="text-decoration: underline;">1</span>103        -<span style="color: #BB0000;">4</span>         0        10      34 ____+    +o--oo--o        <span style="color: #949494;">"</span>*+-+-…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span>  <span style="text-decoration: underline;">2</span>089        -<span style="color: #BB0000;">4</span>         0        <span style="color: #BB0000;">NA</span>      24 ____*    ++++---+-------… <span style="color: #949494;">""</span></span></span></code></pre></div>
 <hr>
 <p></p>
 </div>
@@ -767,7 +1129,7 @@ documentation for the <code><a href="../reference/MarkUse.html">MarkUse()</a></c
 <div class="section level2">
 <h2 id="wrapping-up">Wrapping Up<a class="anchor" aria-label="anchor" href="#wrapping-up"></a>
 </h2>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.3.2 (2023-10-31)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu (64-bit)</span></span>
