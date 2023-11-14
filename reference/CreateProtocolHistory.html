@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">public.ctn0094extra</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.3</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -30,7 +30,13 @@
       </ul><form class="form-inline my-2 my-lg-0" role="search">
         <input type="search" class="form-control me-sm-2" aria-label="Toggle navigation" name="search-input" data-search-index="../search.json" id="search-input" placeholder="Search for" autocomplete="off"></form>
 
-      <ul class="navbar-nav"></ul></div>
+      <ul class="navbar-nav"><li class="nav-item">
+  <a class="external-link nav-link" href="https://github.com/CTN-0094/public.ctn0094extra/" aria-label="github">
+    <span class="fab fa fab fa-github fa-lg"></span>
+     
+  </a>
+</li>
+      </ul></div>
 
     
   </div>
@@ -38,7 +44,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Create a Subject History Table by Protocol</h1>
-      
+      <small class="dont-index">Source: <a href="https://github.com/CTN-0094/public.ctn0094extra/blob/HEAD/R/CreateProtocolHistory.R" class="external-link"><code>R/CreateProtocolHistory.R</code></a></small>
       <div class="d-none name"><code>CreateProtocolHistory.Rd</code></div>
     </div>
 
@@ -84,7 +90,7 @@ data table will form the "backbone" for future join operations. It creates
 one record per person in each study for each day in those studies (when
 <code>persons_df</code> is set to <code>"everybody"</code>), or it creates one record
 per person contained in the table <code>persons_df</code> for each day in those
-studies. The default behaviour is to use the supplied <code>"everybody"</code>
+studies. The default behavior is to use the supplied <code>"everybody"</code>
 table for all consenting subjects in the CTN-0027, CTN-0030, and CTN-0051
 clinical trials. However, users may only care about a smaller subset of
 these patients, so a subset of the <code>"everybody"</code> data frame can be

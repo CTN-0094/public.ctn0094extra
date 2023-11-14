@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">public.ctn0094extra</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.3</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -30,7 +30,13 @@
       </ul><form class="form-inline my-2 my-lg-0" role="search">
         <input type="search" class="form-control me-sm-2" aria-label="Toggle navigation" name="search-input" data-search-index="../search.json" id="search-input" placeholder="Search for" autocomplete="off"></form>
 
-      <ul class="navbar-nav"></ul></div>
+      <ul class="navbar-nav"><li class="nav-item">
+  <a class="external-link nav-link" href="https://github.com/CTN-0094/public.ctn0094extra/" aria-label="github">
+    <span class="fab fa fab fa-github fa-lg"></span>
+     
+  </a>
+</li>
+      </ul></div>
 
     
   </div>
@@ -38,7 +44,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Create a Subject History Table by Protocol</h1>
-      
+      <small class="dont-index">Source: <a href="https://github.com/CTN-0094/public.ctn0094extra/blob/HEAD/R/CreateCTN30ProtocolHistory.R" class="external-link"><code>R/CreateCTN30ProtocolHistory.R</code></a></small>
       <div class="d-none name"><code>CreateCTN30ProtocolHistory.Rd</code></div>
     </div>
 
@@ -96,7 +102,7 @@ and Phase II treatments could start on different days for each subject).
 For subjects who consented to treatment but were never randomized, we use
 an "intent to treat" philosophy and assign them an empty protocol timeline
 starting on the day of consent (day 0) until <code>phase1Len_int</code>.</p>
-<p>NOTE: We expect this function to be used speciifically to create a
+<p>NOTE: We expect this function to be used specifically to create a
 potential visit backbone for CTN-0030. For studies with fixed protocol
 lengths, please use <code>CreateSubjectHistory()</code> instead.</p>
     </div>
