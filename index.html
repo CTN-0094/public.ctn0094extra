@@ -80,27 +80,26 @@
 <div class="section level3">
 <h3 id="installing-dependencies">Installing Dependencies<a class="anchor" aria-label="anchor" href="#installing-dependencies"></a>
 </h3>
-<p>Because this is the “Extra” package which supplements the information in the primary <code>public.ctn0094data::</code> package, we must have the most recent version of this primary data package built first. If you have access to the GitHub repo for the data package, use the <a href="https://CRAN.R-project.org/package=remotes" class="external-link">remotes</a> package to install the data package from GitHub:</p>
+<p>Because this is the “Extra” package which supplements the information in the primary <code>public.ctn0094data::</code> package, we must have the most recent version of this primary data package built first. This package is on <a href="https://CRAN.R-project.org" class="external-link">CRAN</a> at <a href="https://CRAN.R-project.org/package=public.ctn0094data" class="external-link uri">https://CRAN.R-project.org/package=public.ctn0094data</a>, so you can install this data package with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"public.ctn0094data"</span><span class="op">)</span></span></code></pre></div>
+<p>If you have access to the GitHub repo for the development version of this data package, use the <a href="https://CRAN.R-project.org/package=remotes" class="external-link">remotes</a> package to install the data package from GitHub:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">'https://github.com/CTN-0094/public.ctn0094data'</span><span class="op">)</span></span></code></pre></div>
 <p>To build this package from “zipped” source file on your local machine, run the following code (make sure to set the correct version and the path for your machine):</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span></span>
 <span>  <span class="st">'/Users/gabrielodom/Desktop/public.ctn0094data_0.9.0.tar.gz'</span>,</span>
 <span>  repos <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  type <span class="op">=</span> <span class="st">'source'</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Once <code>public.ctn0094data</code> is on <a href="https://CRAN.R-project.org" class="external-link">CRAN</a>, you will be able to install this data package with:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Do not run yet</span></span>
-<span><span class="co"># install.packages("public.ctn0094data")</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="installing-this-package">Installing this Package<a class="anchor" aria-label="anchor" href="#installing-this-package"></a>
 </h3>
 <p>Once you have the <code>public.ctn0094data</code> package downloaded and installed on your computer, you can install this package. For now, use the <code>remotes</code> package to install this package directly from GitHub via</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">'https://github.com/CTN-0094/public.ctn0094data'</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">'https://github.com/CTN-0094/public.ctn0094extra'</span><span class="op">)</span></span></code></pre></div>
 <p>Once <code>public.ctn0094data</code> and <code>public.ctn0094extra</code> have been released on CRAN, you will be able to install this package with:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Do not run yet</span></span>
