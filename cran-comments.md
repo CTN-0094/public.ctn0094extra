@@ -7,6 +7,7 @@ R CMD check results:
 Checks pass on Win devel and old release as well.
 
 - Updated LICENSE file to CRAN template for MIT license
+- Fixed formatting in "Description" field in DESCRIPTION file
 
 
 
