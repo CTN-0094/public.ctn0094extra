@@ -1,7 +1,7 @@
 Package: public.ctn0094extra
 Title: Helper Files for the CTN-0094 Relational Database
-Version: 1.0.3
-Date: 2023-11-14
+Version: 1.0.4
+Date: 2023-11-21
 Authors@R: 
     c(
       person(
