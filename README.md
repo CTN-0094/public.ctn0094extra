@@ -26,16 +26,18 @@ install.packages(
 
 
 ### Installing this Package
-Once you have the `public.ctn0094data` package downloaded and installed on your computer, you can install this package. For now, use the `remotes` package to install this package directly from GitHub via
+Once you have the `public.ctn0094data` package downloaded and installed on your computer, you can install this package.
+
+Now that `public.ctn0094data` and `public.ctn0094extra` have been released on CRAN, you can install this package with:
+``` r
+install.packages("public.ctn0094extra")
+```
+
+For the development version, use the `remotes` package to install this package directly from GitHub via
 ```r
 remotes::install_github('https://github.com/CTN-0094/public.ctn0094extra')
 ```
 
-Once `public.ctn0094data` and `public.ctn0094extra` have been released on CRAN, you will be able to install this package with:
-``` r
-# Do not run yet
-# install.packages("public.ctn0094extra")
-```
 
 
 ## Workflow
